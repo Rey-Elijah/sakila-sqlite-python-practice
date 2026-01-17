@@ -11,8 +11,8 @@ Links a la bases de datos empleada en las pruebas:
 - (SQLite Port) MySQL Sakila Sample Database: https://www.kaggle.com/datasets/atanaskanev/sqlite-sakila-sample-database?resource=download
 
 # Aprendizajes
-Empeze principalmente estas practicas para aprender a usar SQLite3 junto con Python debido a la necesidad que tuve para emplearlo
-en un pequeño proyecto de mi universidad. 
+Empeze principalmente estas practicas para aprender a usar SQLite3 junto con Python debido a la necesidad que tuve de aprender mas
+de estos temas para un pequeño proyecto de mi universidad que requeria estos conocimientos. 
 
 Empeze primero aprendiendo como se realiza una conexion y una consulta simple a la base de datos
 mediante el uso de un objeto cursor y ya de alli fui aumentando de nivel haciendo consultas complejas como por ejemplo relacionando tablas
