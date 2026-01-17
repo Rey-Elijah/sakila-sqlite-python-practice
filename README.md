@@ -2,8 +2,8 @@
 Buscador de peliculas modular en Python utilizando la base de datos de ejemplo Sakila (SQLite). Evolucion de un script funcional a una arquitectura modular con JOINS complejos
 
 # Tecnologias empleadas
-    - SQLite3
-    - Python 3
+- SQLite3
+- Python 3
 
 # Base de datos
 Links a la bases de datos empleada en las pruebas:
