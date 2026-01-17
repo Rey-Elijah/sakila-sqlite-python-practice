@@ -1,0 +1,8 @@
+# Bases de datos SQLite
+*.db
+*.sqlite
+*.sqlite3
+
+# Archivos temporales de Python
+__pycache__/
+*.py[cod]
