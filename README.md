@@ -1,4 +1,4 @@
-# sakila-sqlite-python-practice
+# Practica de SQLite3 y Python
 Buscador de peliculas modular en Python utilizando la base de datos de ejemplo Sakila (SQLite). Evolucion de un script funcional a una arquitectura modular con JOINS complejos
 
 # Tecnologias empleadas
