@@ -15,9 +15,25 @@
 import sqlite3
 import os
 import textwrap
+import json
+
+def load_config():
+    # Lee el archivo Json y devuelve un diccionario con los datos
+    try:
+        with open("scripts/config.json", "r") as archivo:
+            return json.load(archivo)
+    except FileNotFoundError:
+        # Si no existe el archivo de configuracion se devuelven valores por defecto
+        return {
+            "db_path": "src/database/sqlite-sakila.db",
+            "debug_mode": False,
+            "max_results": 5
+        }
+
 # configuracion global
-DEBUGGIN = False # activa el modo debug que habilita mensajes e impide que no se limpie la terminal al usar el programa
-DB_PATH = r"src\database\sqlite-sakila.db" # ruta relativa de la base de datos
+CONFIG = load_config()
+DEBUGGIN = CONFIG["debug_mode"] # activa el modo debug que habilita mensajes e impide que no se limpie la terminal al usar el programa
+DB_PATH = CONFIG["db_path"] # ruta relativa de la base de datos
 
 # fnc para realizar la conexion de la base de datos parasada como argumento
 # - db_path: String el cual indica la ruta de la base de datos
@@ -39,7 +55,7 @@ def do_query(conn, search, search_type):
     cursor = conn.cursor()
     match search_type:
         case "by_film":            
-            query = '''
+            query = f'''
                     SELECT f.film_id
                          , f.title
                          , f.release_year
@@ -52,12 +68,12 @@ def do_query(conn, search, search_type):
                     ON fa.actor_id = a.actor_id
                     WHERE f.title LIKE ?
                     GROUP BY f.film_id
-                    LIMIT 5;
+                    LIMIT {CONFIG["max_results"]};
                     '''
             # ejecuta la consulta SQL y parasamos como segundo parametro el input como tupla
             cursor.execute(query, (f"%{search}%",))
         case "by_actor":
-            query = '''
+            query = f'''
                     SELECT a.actor_id
                          , a.first_name
                          , a.last_name
@@ -69,11 +85,11 @@ def do_query(conn, search, search_type):
                     ON f.film_id = fa.film_id
                     WHERE (a.first_name || ' ' || a.last_name) LIKE ?
                     GROUP BY a.actor_id
-                    LIMIT 5
+                    LIMIT {CONFIG["max_results"]}
                     '''
             cursor.execute(query, (f"%{search}%",))
         case "top5":
-            query = '''
+            query = f'''
                     SELECT ca.category_id
                          , ca.name as category
                          , COUNT(fl.film_id) as total_films
@@ -84,7 +100,7 @@ def do_query(conn, search, search_type):
                     ON ca.category_id = fc.category_id
                     GROUP BY ca.name
                     ORDER BY Total_Films DESC
-                    LIMIT 5;
+                    LIMIT {CONFIG["max_results"]};
                     '''
             cursor.execute(query)
     # obtenemos los resultados

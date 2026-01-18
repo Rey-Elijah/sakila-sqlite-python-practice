@@ -1,0 +1,5 @@
+{
+    "db_path": "src/database/sqlite-sakila.db",
+    "debug_mode": false,
+    "max_results": 5
+}
