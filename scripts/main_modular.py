@@ -54,12 +54,14 @@ def do_query(conn, search, search_type):
                     GROUP BY f.film_id
                     LIMIT 5;
                     '''
+            # ejecuta la consulta SQL y parasamos como segundo parametro el input como tupla
+            cursor.execute(query, (f"%{search}%",))
         case "by_actor":
             query = '''
                     SELECT a.actor_id
-                        , a.first_name
-                        , a.last_name
-                        , GROUP_CONCAT(f.title, ', ') AS films
+                         , a.first_name
+                         , a.last_name
+                         , GROUP_CONCAT(f.title, ', ') AS films
                     FROM actor AS a
                     INNER JOIN film_actor AS fa
                     ON fa.actor_id = a.actor_id
@@ -69,37 +71,58 @@ def do_query(conn, search, search_type):
                     GROUP BY a.actor_id
                     LIMIT 5
                     '''
-    # ejecuta la consulta SQL y parasamos como segundo parametro el input como tupla
-    cursor.execute(query, (f"%{search}%",))
+            cursor.execute(query, (f"%{search}%",))
+        case "top5":
+            query = '''
+                    SELECT ca.category_id
+                         , ca.name as category
+                         , COUNT(fl.film_id) as total_films
+                    FROM film_category as fc
+                    INNER JOIN film as fl
+                    ON fl.film_id = fc.film_id
+                    INNER JOIN category as ca
+                    ON ca.category_id = fc.category_id
+                    GROUP BY ca.name
+                    ORDER BY Total_Films DESC
+                    LIMIT 5;
+                    '''
+            cursor.execute(query)
     # obtenemos los resultados
     rows = cursor.fetchall()
     return rows
 # fnc para imprimir el query del tipo de busqueda que haya realizado el usuario
 # rows: lista de datos obtenidas de un query
 def print_query(rows, busqueda, search_type):
-    debug_print("Mostrando peliculas...")
     if rows:
         match search_type:
             case "by_film":
+                debug_print("Mostrando peliculas...")
                 print_films(rows)
             case "by_actor":
+                debug_print("Mostrando Actores...")
                 print_actors(rows)
+            case "top5":
+                debug_print("Mostrando Top 5 Categorias...")
+                print_top5(rows)
     else:
         print(f"No se encontraron peliculas que coincidan con: '{busqueda}'")
-# Fnc
+
 def print_films(rows):
+    # Definimos los anchos para las columnas
+    id_w, t_w, an_w, r_w, a_w = 5, 20, 5, 5, 50
     # Encabezados por columna
-    print(f"\n{'ID':<5} | {'TITULO':<30} | {'ANIO'} | {'RATING'} | {'ACTOR'}")
-    print("-" * 60)
+    header = f"{'ID':<{id_w}} | {'TITULO':<{t_w}} | {'ANIO':<{an_w}} | {'RATING':<{r_w}} | {'ACTOR':<{a_w}}"
+    print(f"\n{header}")
+    print("-" * len(header))
     # Datos por fila
     for row in rows:
-        print(f"{row['film_id']:<5} | {row['title']:<30} | {row['release_year']} | {row['rating']:<5} | {row['actores']}") 
+        print(f"{row['film_id']:<{id_w}} | {row['title']:<{t_w}} | {row['release_year']:<{an_w}} | {row['rating']:<{r_w}} | {row['actores']:<{a_w}}") 
 
 def print_actors(rows):
-    # Definimos los anchos para las columnas
+    # Anchos para las columnas
     id_w, fn_w, ln_w, films_w = 5, 12, 12, 50
     # Definimos e imprimimos los encabezados de cada columna
-    header = f"\n{'ID':<{id_w}} | {'FIRST NAME':<{fn_w}} | {'LAST NAME':<{ln_w}} | {'films':<{films_w}}"
+    header = f"\n{'ID':<{id_w}} | {'PRIMER NOMBRE':<{fn_w}} | {'SEGUNDO NOMBRE':<{ln_w}} | {'FILMES':<{films_w}}"
     print(f"\n{header}")
     print("-" * len(header))
     
@@ -117,14 +140,25 @@ def print_actors(rows):
         # Separador entre cada actor
         print("-" * len(header))
 
+def print_top5(rows):
+    # Definimos anchos de columnas
+    id_w, c_w, tf_w = 5, 20, 5
+    # Encabezados por columna
+    header = f"\n{'ID':<{id_w}} | {'CATEGORY':<{c_w}} | {'TOTAL FILMS':<{tf_w}}"
+    print(f"\n{header}")
+    print("-" * len(header))
+    # Datos por fila
+    for row in rows:
+        print(f"{row['category_id']:<{id_w}} | {row['category']:<{c_w}} | {row['total_films']:<{tf_w}}") 
+
 # fnc que muestra el menu se seleccion y que devuelve la opcion ingresada la cual es un int
 def option_selection():
     print('''
-    Selecciona una opcion:
-    1- Buscar pelicula por nombre
-    2- Buscar pelicula por actor
-    3- Ver Top 5 de categorias
-    4- Salir
+Selecciona una opcion de busqueda:
+1- Buscar pelicula por nombre
+2- Buscar pelicula por actor
+3- Ver Top 5 de categorias
+4- Salir
     ''')    
     opcion = input("Opcion...: ")
     # si la opcion ingresada es un digito esta se retorna, de otro modo retornara
@@ -146,7 +180,9 @@ def do_func(selection):
             pause()
             clean_screen()
         case 3:
-            pass
+            search("top5")
+            pause()
+            clean_screen()
         case 4:
             print("bye bye!")
         case _:
@@ -155,11 +191,11 @@ def do_func(selection):
 def search(search_type):
     match search_type:
         case "by_film":
-            busqueda = input("Ingresa el nombre de la pelicula (o parte de el)...:")
+            busqueda = input("Ingresa el nombre de la pelicula (o parte de el)...: ")
         case "by_actor":
-            busqueda = input("Ingresa el nombre del actor (o parte de el)...:")
-        case "show_top":
-            pass
+            busqueda = input("Ingresa el nombre del actor (o parte de el)...: ")
+        case "top5":
+            busqueda = ""
 
     # obtenemos la conexion a la db en la ruta de la variable global DB_PATH
     mi_conexion = obtener_conexion(DB_PATH)
@@ -168,7 +204,8 @@ def search(search_type):
         rows = do_query(mi_conexion, busqueda, search_type)
         # Imprimimos el query en consola
         print_query(rows, busqueda, search_type)
-        mi_conexion.close()
+        mi_conexion.close() 
+        debug_print("Conexion cerrada con exito")
 
 # fnc para imprimir mensajes debug en la consola cuando la variable 'DEBUGGIN' es True
 # - message: mensaje de tipo String que sera impreso
