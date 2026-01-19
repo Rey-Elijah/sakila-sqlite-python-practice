@@ -12,7 +12,6 @@ Buscador de peliculas modular en Python utilizando la base de datos de ejemplo S
 4. abre la terminal y accede al directorio del proyecto
 5. ejecuta el comando:
     `python run.py`  
-    
 
 # Base de datos
 Links a la bases de datos empleada en las pruebas:
