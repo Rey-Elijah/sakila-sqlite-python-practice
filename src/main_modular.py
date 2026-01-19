@@ -18,17 +18,25 @@ import textwrap
 import json
 
 def load_config():
-    # Lee el archivo Json y devuelve un diccionario con los datos
+    # valores por default para la configuracion por si falla el leer config.json
+    default_config = {
+        "db_path": "data/sqlite-sakila.db",
+        "debug_mode": False,
+        "max_results": 5
+    }
     try:
-        with open("scripts/config.json", "r") as archivo:
+        # Lee el archivo Json y devuelve un diccionario con los datos
+        with open("config/config.json", "r") as archivo:
             return json.load(archivo)
+    # por si no se encuentra config.json
     except FileNotFoundError:
-        # Si no existe el archivo de configuracion se devuelven valores por defecto
-        return {
-            "db_path": "src/database/sqlite-sakila.db",
-            "debug_mode": False,
-            "max_results": 5
-        }
+        print("Aviso: config.json no encontrado. Usando valores por defecto.")
+        return default_config
+    # Por si hay un error formato en config.json
+    except json.JSONDecodeError as e:
+        print(f"Error: El archivo config.json tiene un error en formato: {e}")
+        print("Se usaran los valores por defecto")
+        return default_config
 
 # configuracion global
 CONFIG = load_config()
@@ -214,14 +222,12 @@ def search(search_type):
             busqueda = ""
 
     # obtenemos la conexion a la db en la ruta de la variable global DB_PATH
-    mi_conexion = obtener_conexion(DB_PATH)
-    if mi_conexion:
-        # Obtenemos los resultados del query
-        rows = do_query(mi_conexion, busqueda, search_type)
-        # Imprimimos el query en consola
-        print_query(rows, busqueda, search_type)
-        mi_conexion.close() 
-        debug_print("Conexion cerrada con exito")
+    with obtener_conexion(DB_PATH) as mi_conexion:
+        if mi_conexion:
+            # Obtenemos los resultados del query
+            rows = do_query(mi_conexion, busqueda, search_type)
+            # Imprimimos el query en consola
+            print_query(rows, busqueda, search_type)
 
 # fnc para imprimir mensajes debug en la consola cuando la variable 'DEBUGGIN' es True
 # - message: mensaje de tipo String que sera impreso
@@ -242,7 +248,6 @@ def pause(menssage = "\nPresiona <Enter> para continuar..."):
 def main():
     # opcion del usuario
     opcion = -1
-    clean_screen()
     # mientras la opcion no sea 4 no se acabara el programa
     while opcion != 4:
         # la opcion seleccionada por el usuario del menu
