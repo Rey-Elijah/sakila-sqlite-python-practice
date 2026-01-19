@@ -15,3 +15,6 @@ env/
 # Archivos temporales de Python
 __pycache__/
 *.py[cod]
+
+# exports
+*.txt

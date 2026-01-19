@@ -16,7 +16,9 @@ import sqlite3
 import os
 import textwrap
 import json
+from datetime import datetime
 
+# fnc encargada de leer la configuracion dentro de config.json
 def load_config():
     # valores por default para la configuracion por si falla el leer config.json
     default_config = {
@@ -37,6 +39,39 @@ def load_config():
         print(f"Error: El archivo config.json tiene un error en formato: {e}")
         print("Se usaran los valores por defecto")
         return default_config
+# fnc que exporta los resultados de busqueda si el usuario lo desea
+def export_results(rows, search_type):
+    if not rows:
+        return
+    # Confirmamos si el usuario quiere exportar
+    confirmar = input("\n¿Deseas exportar estos resultados a un archivo .txt? (s/n)...: ").lower()
+    if confirmar != "s":
+        return
+    # Generamos una estampa de tiempo: AnioMesDia_HoraMinutoSegundo
+    timeStamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    # Creamos el nuevo nombre del archivo
+    nombre_archivo = f"exports/resultado_{search_type}_{timeStamp}.txt"
+    try:
+        # Si no existe el directorio 'exports' entonces lo crea
+        if not os.path.exists("exports"):
+            os.makedirs("exports")
+        # Escribimos el archivo
+        with open(nombre_archivo, "w", encoding="utf-8") as f:
+            # Encabezado principal
+            f.write(f"REPORTE DE BUSQUEDA - TIPO: {search_type}\n")
+            f.write("=" * 60 + "\n")
+            # Escribimos los datos
+            for row in rows:
+                # obtenemos los nombres de cada columna y sus valores. 
+                # ej; {key} seria film_id y row[key] seria el valor de esa key
+                linea = " | ".join([f"{key}: {row[key]}" for key in row.keys()])
+                # escribe la linea
+                f.write(linea + "\n")
+                # Linea de separacion entre fila
+                f.write("-" * 60 + "\n")
+        print(f"Resultados exportados con exito a: {nombre_archivo}")
+    except Exception as e:
+        print(f"Error al exportar: {e}")
 
 # configuracion global
 CONFIG = load_config()
@@ -166,9 +201,9 @@ def print_actors(rows):
 
 def print_top5(rows):
     # Definimos anchos de columnas
-    id_w, c_w, tf_w = 5, 20, 5
+    id_w, c_w, tf_w = 3, 15, 3
     # Encabezados por columna
-    header = f"\n{'ID':<{id_w}} | {'CATEGORY':<{c_w}} | {'TOTAL FILMS':<{tf_w}}"
+    header = f"\n{'ID':<{id_w}} | {'CATEGORIAS':<{c_w}} | {'TOTAL DE FILMS':<{tf_w}}"
     print(f"\n{header}")
     print("-" * len(header))
     # Datos por fila
@@ -228,6 +263,7 @@ def search(search_type):
             rows = do_query(mi_conexion, busqueda, search_type)
             # Imprimimos el query en consola
             print_query(rows, busqueda, search_type)
+            export_results(rows, search_type)
 
 # fnc para imprimir mensajes debug en la consola cuando la variable 'DEBUGGIN' es True
 # - message: mensaje de tipo String que sera impreso
