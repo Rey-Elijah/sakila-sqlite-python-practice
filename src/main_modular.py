@@ -39,6 +39,13 @@ def load_config():
         print(f"Error: El archivo config.json tiene un error en formato: {e}")
         print("Se usaran los valores por defecto")
         return default_config
+
+# configuracion global
+CONFIG = load_config()
+DEBUGGIN = CONFIG["debug_mode"] # activa el modo debug que habilita mensajes e impide que no se limpie la terminal al usar el programa
+DB_PATH = CONFIG["db_path"] # ruta relativa de la base de datos
+
+
 # fnc que exporta los resultados de busqueda si el usuario lo desea
 def export_results(rows, search_type):
     if not rows:
@@ -62,8 +69,9 @@ def export_results(rows, search_type):
             f.write("=" * 60 + "\n")
             # Escribimos los datos
             for row in rows:
-                # obtenemos los nombres de cada columna y sus valores. 
-                # ej; {key} seria film_id y row[key] seria el valor de esa key
+                # [f"{key}: {row[key]}" for key in ...] es un bucle for que crea una lista de textos
+                # " | ".join toma esa lista y pega todos los elementos usando un separador |
+                # .keys() obtiene los nombres de las columnas (ej: film_id, title, rating)
                 linea = " | ".join([f"{key}: {row[key]}" for key in row.keys()])
                 # escribe la linea
                 f.write(linea + "\n")
@@ -72,11 +80,6 @@ def export_results(rows, search_type):
         print(f"Resultados exportados con exito a: {nombre_archivo}")
     except Exception as e:
         print(f"Error al exportar: {e}")
-
-# configuracion global
-CONFIG = load_config()
-DEBUGGIN = CONFIG["debug_mode"] # activa el modo debug que habilita mensajes e impide que no se limpie la terminal al usar el programa
-DB_PATH = CONFIG["db_path"] # ruta relativa de la base de datos
 
 # fnc para realizar la conexion de la base de datos parasada como argumento
 # - db_path: String el cual indica la ruta de la base de datos
@@ -87,7 +90,9 @@ def obtener_conexion(db_path):
         conexion.row_factory = sqlite3.Row
         return conexion
     except Exception as e:
-        debug_print(f"Error de conexion: {e}")
+        error_msg = f"Error critico de conexion: {e}"
+        registrar_log(error_msg, level="CRITICAL")
+        print("Fallo en la conexion. Revisa el archivo logs/sistema.log para mas detalles.")
         return None
 # funcion que realiza un query en la base de datos para buscar el nombre
 # de la pelicula ingresada por el usuario ya sea el nombre completo o parcial
@@ -265,11 +270,20 @@ def search(search_type):
             print_query(rows, busqueda, search_type)
             export_results(rows, search_type)
 
+def registrar_log(message, level="ERROR"):
+    # verificamos si existe el directorio logs
+    if not os.path.exists("logs"):
+        os.makedirs("logs")
+    timestamp = datetime.now().strftime("%Y%M%D_%H%M%S")
+    with open("logs/sistema.log", "a", encoding="utf-8") as f:
+        f.write(f"[{timestamp}] [{level}] [{message}]\n")
 # fnc para imprimir mensajes debug en la consola cuando la variable 'DEBUGGIN' es True
 # - message: mensaje de tipo String que sera impreso
 def debug_print(message):
     if not (DEBUGGIN): return
     print(f"DEBUG: {message}")
+    # Se registra en el log historico cada mensaje
+    registrar_log(message, nivel="DEBBUG" if DEBUGGIN else "INFO")
 
 # fnc que limpia la terminal al ser llamada
 def clean_screen():
