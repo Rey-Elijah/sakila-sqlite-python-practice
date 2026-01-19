@@ -10,8 +10,8 @@ Buscador de peliculas modular en Python utilizando la base de datos de ejemplo S
 2. Descarga la base de datos Sakila para SQLite desde Kaggle (el link se encuentra en la seccion de Base de datos que esta mas abajo)   
 3. Coloca el archivo sqlite_sakila.db en la carpeta src/database/
 4. abre la terminal y accede al directorio del proyecto
-5. ejecuta el comando:
-    `python run.py`  
+5. ejecuta el comando:  
+    `python run.py`
 
 # Base de datos
 Links a la bases de datos empleada en las pruebas:
