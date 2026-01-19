@@ -1,3 +1,12 @@
+# Entornos virtuales
+.venv/
+venv/
+env/
+
+# IDEs
+.vscode/
+.idea/
+
 # Bases de datos SQLite
 *.db
 *.sqlite
